@@ -52,6 +52,68 @@ class RequestBuilder:
         self.surface = surface
         self.token_meter = token_meter
 
+    def _relief_check(self, composition, reference):
+        """Measure the draft as it stands now, against the relief mark."""
+
+        def measure(events):
+            request = ModelRequest(
+                provider=composition.provider,
+                model=composition.model,
+                system_prompt=composition.system_prompt,
+                messages=(*self.surface.project(events), reference),
+                tools=composition.tools,
+                temperature=composition.temperature,
+                max_output_tokens=composition.max_output_tokens,
+            )
+            measured = self.token_meter.measure(request)
+            return measured["input_tokens"], measured["relief_tokens"]
+
+        return measure
+
+    async def _fold_finished_groups(self, session_id, *, compaction, pressure, relief):
+        """Fold finished tool groups of this Turn until the draft is small enough.
+
+        Unlike Turn-front maintenance, this runs on the admission path: the
+        alternative to folding here is publishing the oversized request we were
+        trying to avoid. So a failure is recorded and then raised, and the Step
+        does not reach the Provider. Running out of *legal candidates* is a
+        different outcome - an explained no-op that leaves the hard input limit
+        to refuse the request on its own terms if it must.
+        """
+
+        from traceh.session.compaction import CompactionError
+        from traceh.session.surface_replacement import SURFACE_COMPACTION_FAILED
+
+        async def still_over_relief():
+            events = await self.sessions.read_session(session_id)
+            current, target = relief(events)
+            return target is not None and current > target
+
+        events = await self.sessions.read_session(session_id)
+        if not pressure(events):
+            return 0
+        try:
+            return await compaction.fold_closed_steps(
+                session_id,
+                kept_recent_groups=self.token_meter.policy.fold_protect_recent_groups,
+                readback_protect_utf8_bytes=(
+                    self.token_meter.policy.fold_protect_readback_utf8_bytes
+                ),
+                policy_digest=fingerprint(self.token_meter.policy.to_dict()),
+                still_over_watermark=still_over_relief,
+            )
+        except CompactionError as error:
+            await self.sessions.append_session(
+                session_id,
+                SURFACE_COMPACTION_FAILED,
+                {
+                    "method": "step-fold",
+                    "code": error.code,
+                    "committed": error.committed,
+                },
+            )
+            raise
+
     async def prepare(
         self,
         *,
@@ -116,10 +178,21 @@ class RequestBuilder:
                 if isinstance(maintenance, PendingSemanticSummary):
                     pending_summary = maintenance
             except CompactionError as error:
+                # Turn-front maintenance is optional work: failing it leaves the
+                # history exactly as it was, which is no worse than never having
+                # compacted. It is recorded and the Turn continues.
                 await self.sessions.append_session(
                     session_id,
                     SURFACE_COMPACTION_FAILED,
                     {"method": "automatic", "code": error.code, "committed": error.committed},
+                )
+
+            if self.token_meter.policy.step_fold_enabled:
+                await self._fold_finished_groups(
+                    session_id,
+                    compaction=compaction,
+                    pressure=pressure,
+                    relief=self._relief_check(composition, reference),
                 )
         if pending_summary is not None:
             from traceh.session.semantic_summary import SUMMARY_INPUT, summary_input_data

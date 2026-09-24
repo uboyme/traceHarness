@@ -349,6 +349,37 @@ def read_history(
     return HistorySnapshot(policy, tuple(nodes), tuple(roots), visible)
 
 
+def closed_step_membership(events: tuple[EventEnvelope, ...]) -> dict[int, int]:
+    """Map original Surface leaves to the real ``step/end`` that closed them.
+
+    The Turn-level map cannot describe a long single Turn: a task that never
+    ends a Turn has no closed history at all by that measure, even after
+    hundreds of finished tool groups. A closed Step is the smaller unit that is
+    equally safe to fold - its model response is complete, its tool calls have
+    all landed, and nothing in it is still running.
+    """
+
+    result: dict[int, int] = {}
+    open_step: str | None = None
+    leaves: list[int] = []
+    for event in events:
+        if event.type == "step/start":
+            identity = event.data.get("step_id")
+            if open_step is not None or type(identity) is not str or not identity:
+                raise HistoryReadError("history-source-invalid")
+            open_step = identity
+            leaves = []
+        elif event.type == "step/end":
+            if open_step is None or event.data.get("step_id") != open_step:
+                raise HistoryReadError("history-source-invalid")
+            result.update((seq, event.seq) for seq in leaves)
+            open_step = None
+            leaves = []
+        elif event.type in SURFACE_MESSAGE_TYPES and open_step is not None:
+            leaves.append(event.seq)
+    return result
+
+
 def closed_turn_membership(events: tuple[EventEnvelope, ...]) -> dict[int, int]:
     """Map original Surface leaves to their real closing Turn, shared by evidence readers."""
     result: dict[int, int] = {}

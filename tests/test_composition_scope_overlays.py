@@ -13,7 +13,7 @@ from plugin_fixtures import (
 )
 
 from traceh.api.json_types import JsonValue
-from traceh.api.llm import ModelResponse, ToolCall
+from traceh.api.llm import CompletionCategory, ModelResponse, ToolCall
 from traceh.api.prompts import PromptSection
 from traceh.api.tools import EffectKind, Tool, ToolExecutionContext, ToolOutput
 from traceh.kernel.composition_overlays import (
@@ -429,7 +429,7 @@ async def test_agent_policy_overlay_changes_real_tool_admission(
             (
                 ModelResponse(
                     tool_calls=(ToolCall("policy-call", "policy-tool", {}),),
-                    finish_reason="tool_calls",
+                    completion=CompletionCategory.TOOL_HANDOFF,
                 ),
                 ModelResponse(content="done"),
             )
@@ -570,7 +570,7 @@ async def test_agent_tool_overlay_executes_through_the_real_runtime_and_rebuilds
         (
             ModelResponse(
                 tool_calls=(ToolCall("call-1", "layered-tool", {}),),
-                finish_reason="tool_calls",
+                completion=CompletionCategory.TOOL_HANDOFF,
             ),
             ModelResponse(content="done"),
         )

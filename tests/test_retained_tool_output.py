@@ -21,6 +21,7 @@ from traceh.session.recovery import RecoveryService
 from traceh.session.service import SessionService
 from traceh.session.sqlite import SqliteEventStore
 from traceh.session.tool_output import (
+    INLINE,
     render_output_page,
     render_output_search,
     resolve_tool_output,
@@ -192,7 +193,13 @@ async def test_search_restart_then_expand_on_real_runtime_and_sqlite(tmp_path):
             if e.type == "tool/result" and e.data["tool_name"] == "search_tool_output"
         )
         assert result.data["status"] == "succeeded"
-        assert "output_ref" not in result.data
+        assert result.data["output_ref"]["disclosure"] == INLINE
+        readback = resolve_tool_output(
+            events, await runtime.sessions.read_effects(sid), session_id=sid,
+            effect_id=result.data["output_ref"]["effect_id"],
+            digest=result.data["output_ref"]["digest"],
+        )
+        assert readback["content"] == result.data["content"]
         page = json.loads(result.data["content"])
         hit = page["matches"][0]
         assert hit["before_context"] == hit["after_context"] == ""
@@ -378,7 +385,18 @@ async def test_real_shell_survives_restart_and_pages_without_reexecution(tmp_pat
             if e.type == "tool/result" and e.data["tool_name"] == "read_tool_output"
         ]
         assert all(e.data["status"] == "succeeded" for e in results)
-        assert all("output_ref" not in e.data for e in results)  # No recursive persistence.
+        # Format 2 also addresses bounded readback pages so later folding can
+        # reopen them. Their initial disclosure is the full page, not a notice
+        # requiring another lookup just to reach the requested bytes.
+        effects = await runtime.sessions.read_effects(sid)
+        for result in results:
+            ref = result.data["output_ref"]
+            assert ref["disclosure"] == INLINE
+            page_payload = resolve_tool_output(
+                events, effects, session_id=sid,
+                effect_id=ref["effect_id"], digest=ref["digest"],
+            )
+            assert page_payload["content"] == result.data["content"]
         pages = [json.loads(e.data["content"]) for e in results[:-1]]
         assert "".join(page["text"] for page in pages) == text
         assert pages[-1]["next_offset"] is None

@@ -98,7 +98,19 @@ def _refused_batch_message(
         parts.append("Not callable in this Step: " + ", ".join(hidden) + ".")
     if over_limit:
         parts.append(f"This Step allows at most {max_calls} call(s) in one batch.")
-    parts.append("Callable here: " + ", ".join(sorted(exposed)) + ".")
+    if exposed:
+        parts.append("Callable here: " + ", ".join(sorted(exposed)) + ".")
+    else:
+        # A Step may deliberately publish no tools at all - that is how a
+        # bounded wrap-up forces a final answer. Rendering the empty list as
+        # "Callable here: ." says nothing, and a real run showed what saying
+        # nothing costs: the assistant spent one of its last two Steps calling
+        # withdrawn tools, got this reply, and was cancelled by the wall clock
+        # before it ever wrote its report.
+        parts.append(
+            "This Step publishes no tools at all, so no call can succeed here. "
+            "Answer with text only."
+        )
     return " ".join(parts)
 
 

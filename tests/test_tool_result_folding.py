@@ -85,7 +85,9 @@ async def prepare_history(tmp_path, *, failing=False, pair=False, output_limit=2
 
 
 @pytest.mark.parametrize("boundary", ["disabled", "recent", "inline"])
-async def test_fold_skips_disabled_protected_or_unhelpful_sources(tmp_path, boundary):
+async def test_fold_respects_protection_and_includes_referenceable_inline_sources(
+    tmp_path, boundary
+):
     sid, _, _, before, _ = await prepare_history(
         tmp_path, output_limit=1_000_000 if boundary == "inline" else 2000
     )
@@ -99,14 +101,14 @@ async def test_fold_skips_disabled_protected_or_unhelpful_sources(tmp_path, boun
     try:
         report = await runtime.compaction.compact_before_turn(sid)
         events = await runtime.sessions.read_session(sid)
-        assert not any(
-            e.type == SURFACE_REPLACE and e.data["method"] == "tool-fold" for e in events
-        )
+        folds = [e for e in events if e.type == SURFACE_REPLACE and e.data["method"] == "tool-fold"]
         if boundary != "inline":
+            assert not folds
             assert report is None
             assert runtime.surface.project(events) == before
         else:
-            assert report.method == "automatic"  # Fall through to the existing M3 layer.
+            assert len(folds) == 1  # Format 2 also makes initially inline results foldable.
+            assert report.method == "automatic"  # Remaining pressure reaches the M3 layer.
         assert not await runtime.check_invariants(sid)
     finally:
         await runtime.dispose()
@@ -199,7 +201,9 @@ async def test_automatic_fold_keeps_pair_recent_turn_and_readback_after_restart(
         assert fold.source_seqs == (original.seq,)
         assert fold.message.tool_call_id == "original"
         assert fold.message.name == "shell"
-        assert json.loads(fold.message.content)["output_ref"] == ref
+        read_action = json.loads(fold.message.content)["read"]
+        assert read_action["tool"] == "read_tool_output"
+        assert {key: read_action["arguments"][key] for key in identity} == identity
         projected = runtime.surface.project(events, through_seq=folds[0].seq)
         assert len(projected) == len(before)
         for old, new in zip(before, projected, strict=True):
@@ -335,7 +339,7 @@ async def test_fold_forgery_rejected_by_shared_source_checker(tmp_path, change):
         elif change == "cut":
             data["cut_seq"] -= 1
         elif change == "kept":
-            data["kept_recent_turns"] += 1
+            data["boundary"]["kept_recent"] += 1
         else:
             data["source_utf8_bytes"] += 1
         forged = tuple(replace(e, data=data) if e.seq == fold.seq else e for e in events)

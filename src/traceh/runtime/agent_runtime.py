@@ -628,6 +628,7 @@ def _prepare_default_runtime(
     event_store: EventStore | None = None,
     additional_tools: tuple[Tool, ...] = (),
     include_default_tools: bool = True,
+    output_tool_ids: tuple[str, ...] = (),
     service_bindings: Sequence[ScopedServiceBinding] = (),
     tool_bindings: Sequence[ScopedToolBinding] = (),
     prompt_bindings: Sequence[ScopedPromptBinding] = (),
@@ -703,17 +704,32 @@ def _prepare_default_runtime(
     services = ServiceRegistry()
     from traceh.tools.output import ListToolOutputs, ReadToolOutput, SearchToolOutput
 
+    # All three bind this one SessionService, so a host that wants read-back
+    # without the whole default set does not have to build a second Session
+    # service - or switch on include_default_tools and hand a read-only role
+    # shell and patch access along with it.
+    output_tools: dict[str, Tool] = {
+        tool.name: tool
+        for tool in (
+            ReadToolOutput(sessions, max_chars=config.max_tool_output_chars),
+            ListToolOutputs(sessions, max_chars=config.max_tool_output_chars),
+            SearchToolOutput(sessions, max_chars=config.max_tool_output_chars),
+        )
+    }
+    unknown_output_tools = tuple(name for name in output_tool_ids if name not in output_tools)
+    if unknown_output_tools:
+        raise ValueError(f"unknown output tool: {unknown_output_tools[0]}")
     default_tools: tuple[Tool, ...] = (
         ListFilesTool(),
         ReadFileTool(),
         SearchTextTool(),
         ApplyPatchTool(),
         ShellTool(),
-        ReadToolOutput(sessions, max_chars=config.max_tool_output_chars),
-        ListToolOutputs(sessions, max_chars=config.max_tool_output_chars),
-        SearchToolOutput(sessions, max_chars=config.max_tool_output_chars),
+        *output_tools.values(),
     )
     selected_tools = (default_tools if include_default_tools else ()) + additional_tools
+    if not include_default_tools:
+        selected_tools += tuple(output_tools[name] for name in output_tool_ids)
     if (
         include_default_tools
         and config.context_input is not None
@@ -954,6 +970,7 @@ def build_default_runtime(
     event_store: EventStore | None = None,
     additional_tools: tuple[Tool, ...] = (),
     include_default_tools: bool = True,
+    output_tool_ids: tuple[str, ...] = (),
     service_bindings: Sequence[ScopedServiceBinding] = (),
     tool_bindings: Sequence[ScopedToolBinding] = (),
     prompt_bindings: Sequence[ScopedPromptBinding] = (),
@@ -978,6 +995,7 @@ def build_default_runtime(
         event_store=event_store,
         additional_tools=additional_tools,
         include_default_tools=include_default_tools,
+        output_tool_ids=output_tool_ids,
         service_bindings=service_bindings,
         tool_bindings=tool_bindings,
         prompt_bindings=prompt_bindings,
@@ -1027,6 +1045,7 @@ async def build_default_runtime_async(
     event_store: EventStore | None = None,
     additional_tools: tuple[Tool, ...] = (),
     include_default_tools: bool = True,
+    output_tool_ids: tuple[str, ...] = (),
     service_bindings: Sequence[ScopedServiceBinding] = (),
     tool_bindings: Sequence[ScopedToolBinding] = (),
     prompt_bindings: Sequence[ScopedPromptBinding] = (),
@@ -1059,6 +1078,7 @@ async def build_default_runtime_async(
         event_store=event_store,
         additional_tools=additional_tools,
         include_default_tools=include_default_tools,
+        output_tool_ids=output_tool_ids,
         service_bindings=service_bindings,
         tool_bindings=tool_bindings,
         prompt_bindings=prompt_bindings,

@@ -6,7 +6,7 @@ import json
 from dataclasses import asdict
 
 from traceh.api.json_types import canonical_json, fingerprint
-from traceh.api.llm import ModelMessage, ModelRequest
+from traceh.api.llm import CompletionCategory, ModelMessage, ModelRequest
 from traceh.session.surface_replacement import (
     SummarizerIdentity,
     bounded_summary,
@@ -167,7 +167,7 @@ def summary_model_request(events, *, event, composition):
 
 def accepted_summary(response, data):
     """Accept complete structured prose, never trim it into a partial success."""
-    if response.get("tool_calls") or response.get("finish_reason") not in {"stop", "end_turn"}:
+    if response.get("tool_calls") or response.get("completion") != CompletionCategory.NORMAL.value:
         raise ValueError("semantic-summary-response-incomplete")
     try:
         value = json.loads(response["content"])
@@ -216,7 +216,8 @@ def validate_summary_response(events, response_event, *, require_success=True):
         "attempt_id",
         "content",
         "tool_calls",
-        "finish_reason",
+        "completion",
+        "provider_finish_reason",
     }:
         raise ValueError("summary-response-shape-invalid")
     prior = tuple(e for e in events if e.seq < response_event.seq)

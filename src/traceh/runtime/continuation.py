@@ -7,6 +7,7 @@ from typing import Protocol
 
 from traceh.api.llm import ModelResponse
 from traceh.runtime.repeated_denial import RepeatedDenialState
+from traceh.runtime.response_completeness import ResponseCompleteness
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,6 +34,7 @@ class ContinuationRuntime(Protocol):
         self,
         *,
         response: ModelResponse,
+        completeness: ResponseCompleteness,
         step_number: int,
         max_steps: int,
         verification: VerificationFeedback | None,
@@ -47,6 +49,7 @@ class DefaultContinuationRuntime:
         self,
         *,
         response: ModelResponse,
+        completeness: ResponseCompleteness,
         step_number: int,
         max_steps: int,
         verification: VerificationFeedback | None,
@@ -54,6 +57,13 @@ class DefaultContinuationRuntime:
         max_verification_retries: int,
         repeated_denial: RepeatedDenialState | None = None,
     ) -> LoopDirective:
+        # An unfinished response cannot be continued into a success and cannot
+        # be retried into one either: the loop already refused to run its tool
+        # calls, so there is no pending work left to carry forward. This is
+        # checked first because it describes the response we actually got,
+        # which is more informative than a step budget that also ran out.
+        if not completeness.complete:
+            return Finish(completeness.reason)
         if step_number >= max_steps:
             return Finish("max_steps_exceeded")
         if response.tool_calls:

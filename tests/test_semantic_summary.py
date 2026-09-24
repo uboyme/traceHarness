@@ -8,7 +8,7 @@ import pytest
 
 pytest.importorskip("tiktoken")
 
-from traceh.api.llm import ModelResponse, Usage, UsageQuality
+from traceh.api.llm import CompletionCategory, ModelResponse, Usage, UsageQuality
 from traceh.llm.scripted import ScriptedLlmProvider
 from traceh.llm.token_meter import TokenBudgetPolicy
 from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
@@ -140,7 +140,7 @@ async def test_bad_model_summary_preserves_history_and_never_executes_tools(tmp_
         if kind == "json":
             return replace(response, content="not json")
         if kind == "length":
-            return replace(response, finish_reason="length")
+            return replace(response, completion=CompletionCategory.LENGTH)
         if kind == "tool":
             return replace(
                 response,

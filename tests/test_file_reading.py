@@ -337,7 +337,12 @@ async def test_runtime_dispatches_real_continuation_and_failure_then_reopens_evi
         results = [e for e in events if e.type == "tool/result"]
         assert [e.data["status"] for e in results[:2]] == ["succeeded", "failed"]
         assert all(e.data["status"] == "succeeded" for e in results[2:])
-        assert all("output_ref" not in e.data for e in results)
+        # These results are small, so they are still disclosed in full rather
+        # than replaced by a retention notice. They are nonetheless addressable:
+        # that is what lets a long Turn fold them later instead of carrying
+        # every one of them forever.
+        assert all(e.data["output_ref"]["disclosure"] == "inline" for e in results)
+        assert all("notice" not in e.data["content"] for e in results)
         assert not await runtime.check_invariants(sid)
         assert not await verify_request_snapshots(runtime.sessions, runtime.surface, sid)
     finally:

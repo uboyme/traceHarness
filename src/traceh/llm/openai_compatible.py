@@ -15,9 +15,27 @@ import urllib.request
 from dataclasses import dataclass
 from typing import Any
 
-from traceh.api.llm import ModelRequest, ModelResponse, ToolCall, Usage, UsageQuality
+from traceh.api.llm import (
+    CompletionCategory,
+    ModelRequest,
+    ModelResponse,
+    ToolCall,
+    Usage,
+    UsageQuality,
+)
 from traceh.concurrency import await_worker_convergence
 from traceh.llm.failures import ProviderFailure, ProviderFailureCategory
+
+# The finish reasons this protocol defines. A value outside this table - or no
+# value at all - is reported as UNKNOWN rather than guessed into a success,
+# because an unrecognised ending is exactly the case we cannot interpret.
+_FINISH_REASONS: dict[str, CompletionCategory] = {
+    "stop": CompletionCategory.NORMAL,
+    "tool_calls": CompletionCategory.TOOL_HANDOFF,
+    "function_call": CompletionCategory.TOOL_HANDOFF,
+    "length": CompletionCategory.LENGTH,
+    "content_filter": CompletionCategory.REFUSAL,
+}
 
 _HTTP_FAILURES: dict[int, tuple[str, ProviderFailureCategory]] = {
     400: ("provider-http-invalid-request", ProviderFailureCategory.INVALID_REQUEST),
@@ -415,16 +433,26 @@ class OpenAICompatibleProvider:
             raise _protocol_failure() from None
         input_tokens = usage_raw["prompt_tokens"] if usage_is_exact else 0
         output_tokens = usage_raw["completion_tokens"] if usage_is_exact else 0
+        # Providers that separate a reasoning channel report its cost here. It
+        # is read only to make an output budget spent on reasoning visible; the
+        # reasoning text itself is not an answer and is not carried into the
+        # Session as one. A malformed split is left unknown rather than guessed.
+        details = usage_raw.get("completion_tokens_details")
+        reasoning_tokens = details.get("reasoning_tokens") if isinstance(details, dict) else None
+        if type(reasoning_tokens) is not int or reasoning_tokens < 0:
+            reasoning_tokens = None
         return ModelResponse(
             content=content or "",
             tool_calls=tuple(tool_calls),
-            finish_reason=finish_reason or "stop",
+            completion=_FINISH_REASONS.get(finish_reason or "", CompletionCategory.UNKNOWN),
+            provider_finish_reason=finish_reason,
             usage=Usage(
                 input_tokens=input_tokens,
                 output_tokens=output_tokens,
                 quality=(
                     UsageQuality.EXACT if usage_is_exact else UsageQuality.UNKNOWN
                 ),
+                reasoning_tokens=reasoning_tokens if usage_is_exact else None,
             ),
             raw={"response_id": str(raw.get("id", ""))} if isinstance(raw, dict) else {},
         )

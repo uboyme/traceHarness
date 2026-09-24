@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 import pytest
 
 from traceh.api.json_types import JsonValue
-from traceh.api.llm import ModelResponse, ToolCall
+from traceh.api.llm import CompletionCategory, ModelResponse, ToolCall
 from traceh.api.tools import EffectKind, ToolExecutionContext, ToolOutput
 from traceh.llm.scripted import ScriptedLlmProvider
 from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
@@ -43,7 +43,7 @@ async def test_factory_accepts_custom_store_and_tools(tmp_path) -> None:
             ModelResponse(
                 content="call ping",
                 tool_calls=(ToolCall("p", "ping", {}),),
-                finish_reason="tool_calls",
+                completion=CompletionCategory.TOOL_HANDOFF,
             ),
             ModelResponse(content="done"),
         )

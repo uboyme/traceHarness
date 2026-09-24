@@ -38,6 +38,7 @@ from traceh.api.events import EventEnvelope
 from traceh.api.json_types import JsonValue, canonical_json, fingerprint
 from traceh.api.llm import ModelMessage, ToolCall
 from traceh.cli.text_safety import is_single_line_safe, is_unsafe_character
+from traceh.session.tool_output import OUTPUT_READ_TOOL, OUTPUT_TOOL_IDS
 
 #: The durable replacement fact.
 SURFACE_REPLACE = "surface/replace"
@@ -49,6 +50,15 @@ SURFACE_COMPACTION_FAILED = "surface/compaction-failed"
 #: This is a pre-1.0 cutover: there is no second parser, migration, alias or
 #: fallback, and older data requires a new data directory.
 SURFACE_REPLACE_FORMAT_VERSION = 2
+
+#: Which lifecycle unit a ``tool-fold`` boundary is measured in. A Turn cut is
+#: the original behaviour; a Step cut is what lets one long-running Turn fold
+#: its own finished tool groups. The unit travels with the number it qualifies,
+#: because "keep the last 2" means nothing without saying 2 of what - and the
+#: old field silently meant Turns.
+FOLD_TURN = "turn"
+FOLD_STEP = "step"
+FOLD_UNITS = frozenset({FOLD_TURN, FOLD_STEP})
 
 #: Summary methods only; ``tool-fold`` has its own exact shape below.
 #: ``manual`` is a human-authored summary; ``automatic`` is host-triggered and
@@ -152,6 +162,57 @@ class SurfaceReplacement:
 
 
 @dataclass(frozen=True, slots=True)
+class FoldBoundary:
+    """Where a fold may cut and what it must keep, in units that name themselves.
+
+    ``kept_recent_readback_utf8_bytes`` protects reopened evidence by capacity
+    rather than by count, because the budget that matters is the request's, not
+    the number of times the model went back for something. It is measured in
+    UTF-8 bytes, not tokens, for two reasons: this module must stay free of a
+    tokenizer, and the validator has to recompute the identical selection from
+    the event prefix alone. Which is also why the number travels *inside the
+    event*: a replay cannot consult today's configuration to decide what
+    yesterday's request was allowed to fold.
+    """
+
+    unit: str
+    kept_recent: int
+    kept_recent_readback_utf8_bytes: int = 0
+
+    def __post_init__(self) -> None:
+        if self.unit not in FOLD_UNITS:
+            raise ValueError("fold-boundary-unit-invalid")
+        if type(self.kept_recent) is not int or self.kept_recent < 0:
+            raise ValueError("fold-boundary-kept-invalid")
+        if (
+            type(self.kept_recent_readback_utf8_bytes) is not int
+            or self.kept_recent_readback_utf8_bytes < 0
+        ):
+            raise ValueError("fold-boundary-readback-bytes-invalid")
+
+    def to_dict(self) -> dict[str, JsonValue]:
+        return {
+            "unit": self.unit,
+            "kept_recent": self.kept_recent,
+            "kept_recent_readback_utf8_bytes": self.kept_recent_readback_utf8_bytes,
+        }
+
+    @classmethod
+    def from_dict(cls, raw: object) -> FoldBoundary:
+        if type(raw) is not dict or set(raw) != {
+            "unit",
+            "kept_recent",
+            "kept_recent_readback_utf8_bytes",
+        }:
+            raise ValueError("fold-boundary-invalid")
+        return cls(
+            unit=str(raw["unit"]),
+            kept_recent=raw["kept_recent"],
+            kept_recent_readback_utf8_bytes=raw["kept_recent_readback_utf8_bytes"],
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class SurfaceToolFold:
     """One result-body replacement; its original assistant call stays visible."""
 
@@ -160,38 +221,117 @@ class SurfaceToolFold:
     source_digest: str
     source_utf8_bytes: int
     history_utf8_bytes: int
-    kept_recent_turns: int
+    boundary: FoldBoundary
     policy_digest: str
     message: ModelMessage
     method: str = "tool-fold"
 
 
-def folded_tool_message(source: EventEnvelope) -> ModelMessage:
-    """A deterministic historical pointer, never a model-authored outcome claim."""
+def fold_source_call(events: tuple[EventEnvelope, ...], source: EventEnvelope) -> EventEnvelope:
+    """The ``tool/call`` this result answers.
+
+    A read-back result does not record the page it fetched; its originating call
+    does. Both the planner and the validator resolve it the same way so they
+    cannot disagree about what a fold is allowed to say.
+    """
+
+    # The Surface links a result to the *assistant message* that requested it,
+    # which is the right unit for group integrity but carries no arguments. The
+    # separate ``tool/call`` event is where a read-back records which page it
+    # fetched, so that is what this resolves.
+    call_id = source.data.get("tool_call_id")
+    for event in events:
+        if event.type == "tool/call" and event.data.get("tool_call_id") == call_id:
+            return event
+    raise ValueError("tool-fold-call-group-invalid")
+
+
+def _reopen_arguments(source: EventEnvelope, call: EventEnvelope) -> dict[str, JsonValue]:
+    """The exact reader call that returns this result's bytes again.
+
+    For an ordinary result that is its own stored reference. For a *read-back*
+    result it is the page that call already named, taken from its own recorded
+    arguments - never the read-back's own output. Pointing a fold at the
+    reader's output is what nests: reopening it hands back a page envelope
+    wrapping the previous page envelope, one more layer every round. Sending the
+    model to the original page instead is idempotent - literally the call it
+    already made - so a reopened page can be folded like anything else without
+    the evidence drifting further away each time.
+    """
+
+    reference = source.data["output_ref"]
+    if source.data.get("tool_name") not in OUTPUT_TOOL_IDS:
+        return {"effect_id": reference["effect_id"], "digest": reference["digest"]}
+    arguments = call.data.get("arguments")
+    if type(arguments) is not dict or not {"effect_id", "digest"} <= set(arguments):
+        # Without the originating page there is no honest address to offer, and
+        # inventing one would send the model somewhere it never was.
+        raise ValueError("tool-fold-readback-origin-missing")
+    return {
+        key: arguments[key]
+        for key in ("effect_id", "digest", "part", "offset")
+        if key in arguments
+    }
+
+
+def folded_tool_message(source: EventEnvelope, call: EventEnvelope) -> ModelMessage:
+    """A deterministic historical pointer, never a model-authored outcome claim.
+
+    The placeholder carries a ready-to-execute read action, not just a reference.
+    That is not decoration: the assistant call that produced this result stays
+    visible directly above, so re-running the original tool costs the model only
+    a copy of arguments it can already see, while reading the evidence back used
+    to cost it a hand-assembled call carrying a UUID and a 64-character digest.
+    A real trial showed which way that asymmetry pushes - every one of the
+    investigator's 22 repeated reads followed a fold, and it said so itself
+    ("I need to re-read key sources since earlier outputs were folded") - even
+    though the read-back tool worked perfectly on all nine occasions it did
+    reach for it. Folding only saves anything if reopening is the easy path.
+    """
+
     if source.type != "tool/result" or not isinstance(source.data.get("output_ref"), dict):
         raise ValueError("tool-fold-source-not-retained")
     original = surface_message(source)
+    # Every field here is paid for once per fold, forever: a placeholder can
+    # never itself be folded. In one real trial 67 of them cost 19,766 tokens -
+    # 30% of the request that then hit the ceiling - and a third of that was the
+    # same paragraph of prose copied 67 times. What survives is what the model
+    # cannot act without: which call this answers, whether it worked, how big it
+    # was, and one runnable way to get the bytes back. The reference's other
+    # fields are host protocol metadata and stay in the event, which is where
+    # auditors read them. The full explanation of what folding means is prompt
+    # material said once - but this marker still stands alone, so a replay or a
+    # different composition reads as terse rather than cryptic.
     return ModelMessage(
         role="tool",
         tool_call_id=original.tool_call_id,
         name=original.name,
         content=canonical_json(
             {
-                "notice": "Older Tool output folded. Historical evidence, not current state. "
-                "Invocation status is not a process exit code. "
-                "When available, use search_tool_output "
-                "with output_ref and query, or read_tool_output for original content/data; "
-                "otherwise the host can inspect the Effect log. Do not rerun.",
-                "invocation_status": source.data["status"],
-                "output_ref": source.data["output_ref"],
+                "folded": "historical output; read to reopen, do not rerun",
+                "status": source.data["status"],
+                "chars": source.data["output_ref"]["content_chars"],
+                "read": {
+                    "tool": OUTPUT_READ_TOOL,
+                    "arguments": _reopen_arguments(source, call),
+                },
             }
         ),
     )
 
 
 def tool_fold_data(
-    plan: SurfacePrefix, *, kept_recent_turns: int, policy_digest: str
+    plan: SurfacePrefix, *, call: EventEnvelope, boundary: FoldBoundary, policy_digest: str
 ) -> dict[str, JsonValue]:
+    """One replacement replaces one result.
+
+    A caller folding a whole group appends this once per result rather than
+    growing a multi-source event: the assistant call, the tool name, the call
+    id and the ordering all stay exactly where they were, so a group that is
+    half folded is still a well-formed conversation and a crash between two
+    appends leaves nothing to repair.
+    """
+
     if len(plan.source_events) != 1:
         raise ValueError("tool-fold-source-count")
     return {
@@ -202,15 +342,16 @@ def tool_fold_data(
         "source_digest": plan.source_digest,
         "source_utf8_bytes": plan.source_utf8_bytes,
         "history_utf8_bytes": plan.history_utf8_bytes,
-        "kept_recent_turns": kept_recent_turns,
+        "boundary": boundary.to_dict(),
         "policy_digest": policy_digest,
-        "replacement": folded_tool_message(plan.source_events[0]).to_dict(),
+        "replacement": folded_tool_message(plan.source_events[0], call).to_dict(),
     }
 
 
 def _parse_tool_fold(event: EventEnvelope) -> SurfaceToolFold:
     data = event.data
-    keys = _REPLACEMENT_KEYS - {"summarizer", "summary", "summary_truncated"}
+    keys = (_REPLACEMENT_KEYS - {"summarizer", "summary", "summary_truncated"}) | {"boundary"}
+    keys -= {"kept_recent_turns"}
     if (
         set(data) != keys
         or type(data["format_version"]) is not int
@@ -239,7 +380,7 @@ def _parse_tool_fold(event: EventEnvelope) -> SurfaceToolFold:
         source_digest=require_digest(data["source_digest"], "fold source digest"),
         source_utf8_bytes=_non_negative_int(data["source_utf8_bytes"], "fold source bytes"),
         history_utf8_bytes=_non_negative_int(data["history_utf8_bytes"], "fold history bytes"),
-        kept_recent_turns=_non_negative_int(data["kept_recent_turns"], "fold kept turns"),
+        boundary=FoldBoundary.from_dict(data["boundary"]),
         policy_digest=require_digest(data["policy_digest"], "fold policy"),
         message=message,
     )
@@ -482,21 +623,211 @@ def surface_prefix(events: tuple[EventEnvelope, ...], *, cut_seq: int) -> Surfac
     )
 
 
-def tool_fold_plan(
-    events: tuple[EventEnvelope, ...], *, cut_seq: int, source_seq: int | None = None
-) -> SurfacePrefix | None:
-    """Select one still-visible retained result in a genuinely closed old Turn."""
-    from traceh.session.history import closed_turn_membership
+def closed_step_ends(events: Iterable[EventEnvelope]) -> tuple[int, ...]:
+    """Sequences that close a Step that really was open, in order."""
 
-    membership = closed_turn_membership(events)
+    open_step: str | None = None
+    ends: list[int] = []
+    for event in events:
+        if event.type == "step/start":
+            open_step = str(event.data.get("step_id", ""))
+        elif event.type == "step/end":
+            if open_step is not None and str(event.data.get("step_id", "")) == open_step:
+                ends.append(event.seq)
+            open_step = None
+    return tuple(ends)
+
+
+def fold_boundary_ends(events: Iterable[EventEnvelope], unit: str) -> tuple[int, ...]:
+    """The legal cut sequences for this unit, in order."""
+
+    if unit == FOLD_TURN:
+        return closed_turn_ends(events)
+    if unit == FOLD_STEP:
+        return closed_step_ends(events)
+    raise ValueError("fold-boundary-unit-invalid")
+
+
+def _page_address(call: EventEnvelope) -> tuple[str, str] | None:
+    """Which stored page a reader call fetched, if it named one honestly."""
+
+    arguments = call.data.get("arguments")
+    if type(arguments) is not dict:
+        return None
+    effect_id, digest = arguments.get("effect_id"), arguments.get("digest")
+    if type(effect_id) is not str or type(digest) is not str:
+        return None
+    return effect_id, digest
+
+
+def _reopen_demand(events: tuple[EventEnvelope, ...]) -> dict[tuple[str, str], int]:
+    """How many times the model has already paid to reopen each page."""
+
+    demand: dict[tuple[str, str], int] = {}
+    for event in events:
+        if event.type != "tool/call" or event.data.get("tool_name") not in OUTPUT_TOOL_IDS:
+            continue
+        address = _page_address(event)
+        if address is not None:
+            demand[address] = demand.get(address, 0) + 1
+    return demand
+
+
+def _call_key(call: EventEnvelope) -> str | None:
+    """One invocation's identity: the tool and its exact arguments."""
+
+    name, arguments = call.data.get("tool_name"), call.data.get("arguments")
+    if type(name) is not str or type(arguments) is not dict:
+        return None
+    return canonical_json({"tool": name, "arguments": arguments})
+
+
+def _rerun_demand(events: tuple[EventEnvelope, ...]) -> dict[str, tuple[str, int]]:
+    """Calls that re-ran an invocation whose earlier result had been folded.
+
+    Maps each such call id to its invocation key and how many earlier results of
+    that invocation had been folded when it was issued. Only a re-run *after* a
+    fold counts: running the same check again while its output is still visible
+    is new work, not a request for evidence the model has lost.
+    """
+
+    keys: dict[object, str] = {}
+    result_keys: dict[int, str] = {}
+    folded: dict[str, int] = {}
+    demand: dict[str, tuple[str, int]] = {}
+    for event in events:
+        if event.type == "tool/call":
+            if event.data.get("tool_name") in OUTPUT_TOOL_IDS:
+                continue
+            key = _call_key(event)
+            if key is None:
+                continue
+            call_id = event.data.get("tool_call_id")
+            keys[call_id] = key
+            if folded.get(key) and type(call_id) is str:
+                demand[call_id] = (key, folded[key])
+        elif event.type == "tool/result":
+            key = keys.get(event.data.get("tool_call_id"))
+            if key is not None:
+                result_keys[event.seq] = key
+        elif event.type == SURFACE_REPLACE and event.data.get("method") == "tool-fold":
+            sources = event.data.get("source_seqs")
+            if type(sources) is list and len(sources) == 1:
+                key = result_keys.get(sources[0])
+                if key is not None:
+                    folded[key] = folded.get(key, 0) + 1
+    return demand
+
+
+def _protected_readbacks(
+    events: tuple[EventEnvelope, ...],
+    entries,
+    by_seq: dict[int, EventEnvelope],
+    budget: int,
+) -> frozenset[int]:
+    """The most-demanded reopened evidence that fits a byte budget.
+
+    Reopened evidence is a read-back page, or the newest result of an
+    invocation the model re-ran after its earlier result was folded. The second
+    kind is the same demand expressed the other way: the placeholder offers a
+    read action, and a real run showed a model ignoring it and re-running the
+    original read instead - 11 and 4 times in two runs, zero read-backs. Those
+    re-run results were ordinary candidates, so they were folded again two
+    Steps later and fetched again, and the repair loop ran out of time while
+    the same run without folding passed. Holding the newest copy under the same
+    budget ends that loop without trusting the re-run to be cheap; older copies
+    of the same invocation stay foldable.
+
+    Protecting reopened pages by capacity rather than by count keeps the policy
+    tied to the thing that actually runs out - the request - and keeps it a pure
+    function of the event prefix, so a replay reaches the same set without
+    consulting a runtime counter. Bytes rather than tokens because this module
+    must not carry a tokenizer, and the validator has to reproduce the selection
+    exactly. An unbounded exemption was an earlier attempt and it simply moved
+    the failure: 28 permanently retained pages were 42.5% of the request that
+    then hit the ceiling.
+
+    Capacity alone is not enough, and a real run showed why. Ordering purely by
+    recency evicts a page the moment something newer arrives, including pages
+    the model has already spent a call to fetch back; those get folded again,
+    fetched again, and evicted again. In that run 31 of 60 reader calls were
+    exact repeats and five pages were opened four times each, while re-running
+    the *original* tool had essentially stopped (one call, against 22 before
+    this work). The thrash moved into the reader rather than going away.
+
+    So the budget is spent on demonstrated demand first and recency only as the
+    tie-break. A page the model keeps returning to is its working set, and
+    holding it is what the capacity is for; a page read once and never revisited
+    is the cheap thing to let go. Demand is counted from the event prefix like
+    everything else here, so this stays replayable.
+
+    A page too large for the whole budget can never be protected under any
+    ordering, so one is skipped rather than ending the scan - otherwise a single
+    oversized page would evict the entire working set behind it.
+    """
+
+    if budget <= 0:
+        return frozenset()
+    demand = _reopen_demand(events)
+    reruns = _rerun_demand(events)
+    newest_rerun: dict[str, tuple[int, int, object]] = {}
+    candidates = []
+    for entry in entries:
+        source = by_seq.get(entry.seq)
+        if source is None or source.type != "tool/result":
+            continue
+        if source.data.get("tool_name") not in OUTPUT_TOOL_IDS:
+            rerun = reruns.get(source.data.get("tool_call_id"))
+            if rerun is not None:
+                key, count = rerun
+                held = newest_rerun.get(key)
+                if held is None or entry.seq > held[1]:
+                    newest_rerun[key] = (-count, entry.seq, entry)
+            continue
+        try:
+            address = _page_address(fold_source_call(events, source))
+        except ValueError:
+            address = None
+        candidates.append((-demand.get(address, 0) if address else 0, -entry.seq, entry))
+    candidates.extend((count, -seq, entry) for count, seq, entry in newest_rerun.values())
+    protected: set[int] = set()
+    used = 0
+    for _, _, entry in sorted(candidates, key=lambda item: item[:2]):
+        size = surface_utf8_bytes((entry.message,))
+        if used + size > budget:
+            continue
+        protected.add(entry.seq)
+        used += size
+    return frozenset(protected)
+
+
+def tool_fold_plan(
+    events: tuple[EventEnvelope, ...],
+    *,
+    cut_seq: int,
+    unit: str = FOLD_TURN,
+    source_seq: int | None = None,
+    readback_protect_utf8_bytes: int = 0,
+) -> SurfacePrefix | None:
+    """Select one still-visible referenceable result inside a genuinely closed unit."""
+    from traceh.session.history import closed_step_membership, closed_turn_membership
+
+    if unit == FOLD_TURN:
+        membership = closed_turn_membership(events)
+    elif unit == FOLD_STEP:
+        membership = closed_step_membership(events)
+    else:
+        raise ValueError("fold-boundary-unit-invalid")
     entries = surface_conversation(events)
     by_seq = {event.seq: event for event in events}
     links = surface_tool_links(events)
+    protected = _protected_readbacks(events, entries, by_seq, readback_protect_utf8_bytes)
     for entry in entries:
         source = by_seq[entry.seq]
         if (
             source.type != "tool/result"
             or "output_ref" not in source.data
+            or entry.seq in protected
             or entry.seq not in membership
             or membership[entry.seq] > cut_seq
             or (source_seq is not None and entry.seq != source_seq)
@@ -506,7 +837,15 @@ def tool_fold_plan(
         call_seq = links.calls.get(call_id)
         if call_seq is None or membership.get(call_seq) != membership[entry.seq]:
             raise ValueError("tool-fold-call-group-invalid")
-        folded = folded_tool_message(source)
+        # ``links.calls`` points at the assistant message, which is the right
+        # unit for the group check above but carries no arguments; the origin of
+        # a reopened page lives on the separate ``tool/call`` event.
+        try:
+            folded = folded_tool_message(source, fold_source_call(events, source))
+        except ValueError:
+            # A reopened page whose origin cannot be named honestly is simply
+            # not a candidate; it is never folded to a guessed address.
+            continue
         before = surface_utf8_bytes((entry.message,))
         if surface_utf8_bytes((folded,)) >= before:
             continue
@@ -524,14 +863,25 @@ def tool_fold_plan(
 
 def validate_tool_fold(event: EventEnvelope, prior: tuple[EventEnvelope, ...]) -> SurfaceToolFold:
     fold = _parse_tool_fold(event)
-    ends = closed_turn_ends(prior)
-    candidates = ends[: max(0, len(ends) - fold.kept_recent_turns)]
+    ends = fold_boundary_ends(prior, fold.boundary.unit)
+    candidates = ends[: max(0, len(ends) - fold.boundary.kept_recent)]
     if not candidates or fold.cut_seq != candidates[-1]:
-        raise ValueError("tool-fold-protected-turn")
-    plan = tool_fold_plan(prior, cut_seq=fold.cut_seq, source_seq=fold.source_seqs[0])
-    if plan is None or canonical_json(event.data) != canonical_json(
+        raise ValueError("tool-fold-protected-boundary")
+    plan = tool_fold_plan(
+        prior,
+        cut_seq=fold.cut_seq,
+        unit=fold.boundary.unit,
+        source_seq=fold.source_seqs[0],
+        # From the event, not from today's configuration: a replay must reach
+        # the same protected set the original request was allowed to fold past.
+        readback_protect_utf8_bytes=fold.boundary.kept_recent_readback_utf8_bytes,
+    )
+    if plan is None:
+        raise ValueError("tool-fold-source-mismatch")
+    call = fold_source_call(prior, plan.source_events[0])
+    if canonical_json(event.data) != canonical_json(
         tool_fold_data(
-            plan, kept_recent_turns=fold.kept_recent_turns, policy_digest=fold.policy_digest
+            plan, call=call, boundary=fold.boundary, policy_digest=fold.policy_digest
         )
     ):
         raise ValueError("tool-fold-source-mismatch")

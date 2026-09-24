@@ -31,6 +31,7 @@ from traceh.runtime.continuation import (
 )
 from traceh.runtime.repeated_denial import RepeatedDenialPolicy, repeated_denial_state
 from traceh.runtime.request_builder import RequestBuilder
+from traceh.runtime.response_completeness import judge_response
 from traceh.runtime.verification import CompletionVerifier
 from traceh.session.compaction import CompactionError, CompactionService
 from traceh.session.context_input import ContextInputPolicy, ContextInputService
@@ -446,7 +447,10 @@ class AgentLoop:
                                 "content": response.content,
                                 "tool_calls": [call.to_dict() for call in response.tool_calls],
                                 **(
-                                    {"finish_reason": response.finish_reason}
+                                    {
+                                        "completion": response.completion.value,
+                                        "provider_finish_reason": response.provider_finish_reason,
+                                    }
                                     if built.is_summary
                                     else {}
                                 ),
@@ -466,7 +470,8 @@ class AgentLoop:
                                 "dispatch_fingerprint": dispatch_fingerprint,
                                 "reservation_id": admission.reservation_id,
                                 "status": "succeeded",
-                                "finish_reason": response.finish_reason,
+                                "completion": response.completion.value,
+                                "provider_finish_reason": response.provider_finish_reason,
                                 "usage": response.usage.to_dict(),
                                 "provider_active_milliseconds": (
                                     current_provider_active_milliseconds
@@ -514,7 +519,12 @@ class AgentLoop:
                         )
                         continue
 
-                    if response.tool_calls:
+                    # Judged once, before anything irreversible. A truncated or
+                    # unreadable ending stops here: its tool calls are never
+                    # dispatched, and the same verdict later ends the Turn.
+                    completeness = judge_response(response)
+
+                    if response.tool_calls and completeness.may_execute_tools:
                         tool_context = ToolExecutionContext(
                             session_id=session_id,
                             turn_id=turn_id,
@@ -535,7 +545,13 @@ class AgentLoop:
                         if active_composition.verifier is not None
                         else self.verifier
                     )
-                    if not response.tool_calls and effective_verifier is not None:
+                    # Verifying a Turn the model never finished would attach a
+                    # pass/fail verdict to an answer that does not exist.
+                    if (
+                        not response.tool_calls
+                        and completeness.complete
+                        and effective_verifier is not None
+                    ):
                         from traceh.runtime.verification import invoke_verifier
 
                         verification = await invoke_verifier(
@@ -597,6 +613,7 @@ class AgentLoop:
 
                 directive = await self.continuation.decide(
                     response=response,
+                    completeness=completeness,
                     step_number=steps,
                     max_steps=self.max_steps,
                     verification=verification_feedback,

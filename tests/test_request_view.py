@@ -127,6 +127,74 @@ async def test_a_refused_batch_names_the_mistake_and_what_is_callable(tmp_path):
     assert not (tmp_path / "a").exists()
 
 
+class NoToolsAtAll:
+    """A Step that deliberately publishes nothing, the way a wrap-up does."""
+
+    async def select(self, events, composition, **kwargs):
+        del events, composition, kwargs
+        return StepViewSelection(RequestView("wrap-up", (), "Answer with text."))
+
+
+class KeepsCallingWithdrawnTools:
+    """Calls a real tool the Step withdrew, then answers.
+
+    Not a strawman: a real assistant did exactly this with an empty tool list,
+    because the folded placeholders in its own history still advertised a read
+    action. Enforcement denied every call - and it still lost the Step.
+    """
+
+    name = "view-test"
+
+    def __init__(self):
+        self.requests = []
+        self.denials = []
+
+    async def complete(self, request):
+        self.requests.append(request)
+        for message in request.messages:
+            if message.name == "read_file":
+                self.denials.append(message.content)
+        if len(self.requests) == 1:
+            return _response("", ToolCall("gone", "read_file", {"path": "source.txt"}))
+        return _response("here is the report")
+
+
+@pytest.mark.asyncio
+async def test_a_step_with_no_tools_says_so_instead_of_an_empty_list(tmp_path):
+    """An empty "Callable here:" list tells the caller nothing.
+
+    A Step may publish no tools on purpose - that is how a bounded wrap-up
+    forces a final answer. Rendering that as "Callable here: ." left a real
+    assistant with no idea its situation had changed: it spent one of its last
+    two Steps calling withdrawn tools and was cancelled before writing its
+    report. The refusal has to name the state and the only move left.
+    """
+
+    (tmp_path / "source.txt").write_text("visible fact", encoding="utf-8")
+    provider = KeepsCallingWithdrawnTools()
+    runtime = build_default_runtime(
+        RuntimeConfig(data_dir=tmp_path / "data", provider=provider.name, model="model"),
+        provider=provider,
+        event_store=InMemoryEventStore(),
+        step_view=NoToolsAtAll(),
+    )
+    try:
+        sid = await runtime.create_session(tmp_path)
+        await runtime.run_existing(sid, "Wrap up now")
+        events = await runtime.sessions.read_session(sid)
+    finally:
+        await runtime.dispose()
+
+    results = [e for e in events if e.type == "tool/result"]
+    assert [e.data["status"] for e in results] == ["denied"]
+    refusal = results[0].data["content"]
+    assert "Callable here" not in refusal, "an empty list was rendered as a bare period"
+    assert "publishes no tools at all" in refusal
+    assert "Answer with text only." in refusal
+    # The refusal reached the model, which is the only reason it can act on it.
+    assert provider.denials == [refusal]
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize("mixed", [False, True])
 async def test_request_view_freezes_input_enforces_batch_and_replays(tmp_path, mixed):

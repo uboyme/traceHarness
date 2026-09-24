@@ -240,7 +240,7 @@ async def test_recovery_closes_attempt_that_crashed_right_after_start(tmp_path) 
     assert attempt_end.data["attempt_id"] == "a"
     # Nothing may be invented about a response that was never observed.
     assert "usage" not in attempt_end.data
-    assert "finish_reason" not in attempt_end.data
+    assert "completion" not in attempt_end.data
     assert "assistant/message" not in types_of(events)
 
     # Audit trail back to the attempt that was recovered.
@@ -306,7 +306,7 @@ async def test_recovery_closes_attempt_with_durable_assistant_message(tmp_path) 
     assert attempt_end.data["recovered"] is True
     assert attempt_end.data["recovered_from"] == "assistant/message"
     assert "usage" not in attempt_end.data
-    assert "finish_reason" not in attempt_end.data
+    assert "completion" not in attempt_end.data
     # The durable message is evidence, not something to duplicate.
     assert types_of(events).count("assistant/message") == 1
     assert not CoreInvariantChecker().check(events, await sessions.read_effects(session_id))

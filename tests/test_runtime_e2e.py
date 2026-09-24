@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from sandbox_fixtures import real_sandbox_policy
 
-from traceh.api.llm import ModelResponse, ToolCall
+from traceh.api.llm import CompletionCategory, ModelResponse, ToolCall
 from traceh.api.sandbox import SandboxConfiguration
 from traceh.llm.scripted import ScriptedLlmProvider
 from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
@@ -31,7 +31,7 @@ async def test_scripted_coding_agent_modifies_and_verifies_workspace(tmp_path) -
             ModelResponse(
                 content="inspect",
                 tool_calls=(ToolCall("read", "read_file", {"path": "calculator.py"}),),
-                finish_reason="tool_calls",
+                completion=CompletionCategory.TOOL_HANDOFF,
             ),
             ModelResponse(
                 content="fix",
@@ -47,7 +47,7 @@ async def test_scripted_coding_agent_modifies_and_verifies_workspace(tmp_path) -
                         },
                     ),
                 ),
-                finish_reason="tool_calls",
+                completion=CompletionCategory.TOOL_HANDOFF,
             ),
             ModelResponse(
                 content="test",
@@ -58,7 +58,7 @@ async def test_scripted_coding_agent_modifies_and_verifies_workspace(tmp_path) -
                         {"command": "python -m unittest -v", "timeout": 20},
                     ),
                 ),
-                finish_reason="tool_calls",
+                completion=CompletionCategory.TOOL_HANDOFF,
             ),
             ModelResponse(content="done"),
         )

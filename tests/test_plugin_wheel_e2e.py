@@ -22,9 +22,11 @@ import json
 import shutil
 import subprocess
 import sys
+from dataclasses import asdict
 from pathlib import Path
 
 import pytest
+from sandbox_fixtures import real_sandbox_policy
 
 from traceh.evolution.artifacts import (
     copy_declared_build_input as copy_clean_build_input,
@@ -149,8 +151,14 @@ def e2e_report(clean_environment: Path, tmp_path_factory: pytest.TempPathFactory
     scratch = tmp_path_factory.mktemp("e2e-scratch")
     driver = scratch / "plugin_e2e_driver.py"
     shutil.copyfile(DRIVER, driver)
-
-    completed = run([str(venv_python(clean_environment)), str(driver), str(scratch / "work")])
+    sandbox_config = scratch / "sandbox.json"
+    sandbox_config.write_text(json.dumps({
+        "format": 2, "policy": asdict(real_sandbox_policy()), "plugin_grants": []
+    }), encoding="utf-8")
+    completed = run([
+        str(venv_python(clean_environment)), str(driver), str(scratch / "work"),
+        str(sandbox_config),
+    ])
     assert completed.returncode == 0, (
         f"driver failed inside the clean venv:\n{completed.stdout}\n{completed.stderr}"
     )
@@ -334,8 +342,11 @@ def test_default_runtime_is_untouched_even_though_the_plugin_is_installed(
     assert plain["tools"] == [
         "apply_patch",
         "list_files",
+        "list_tool_outputs",
         "read_file",
+        "read_tool_output",
         "search_text",
+        "search_tool_output",
         "shell",
     ]
     assert plain["plugins"] == [{"plugin_id": "traceh.core", "version": __version__}]

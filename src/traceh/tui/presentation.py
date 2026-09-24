@@ -754,7 +754,13 @@ def context_detail_lines(snapshot: ContextSnapshot) -> tuple[Text, ...]:
         field("history bytes", f"{latest.history_utf8_bytes}")
         if latest.method == "tool-fold":
             field("处理方式", "折叠旧工具正文，保留调用参数、结果配对和原文引用")
-            field("保留最近对话", f"{latest.kept_recent_turns} 轮")
+            field(
+                "保留最近",
+                f"{latest.fold_kept_recent} 个已完成工具组"
+                if latest.fold_unit == "step"
+                else f"{latest.fold_kept_recent} 轮对话",
+            )
+            field("原文", "可用 search_tool_output / read_tool_output 按引用展开")
             field("policy digest", latest.policy_digest or "无")
             return tuple(rows)
         field("summary bytes", f"{latest.summary_utf8_bytes}")
@@ -1275,6 +1281,7 @@ def _leaf_failure_line(observation: ProductObservation | None) -> str:
                     "CollaborationPlanInvalid": "分工计划未提交或无效",
                     "CollaborationDispatchFailed": "助手派发或报告读取失败（见工具记录）",
                     "CollaborationChildIncomplete": "助手未完成，multi 已停止",
+                    "CollaborationChildDeliveryEmpty": "助手交回内容为空，multi 已停止",
                     "CollaborationExecutionStopped": "协作执行达到停止条件，未完成交付",
                 }.get(node.leaf_error_type, node.leaf_error_type),
                 limit=300,

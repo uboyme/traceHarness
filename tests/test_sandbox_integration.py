@@ -4,7 +4,7 @@ import shlex
 
 from test_sandbox_docker import settings as settings
 
-from traceh.api.llm import ModelResponse, ToolCall
+from traceh.api.llm import CompletionCategory, ModelResponse, ToolCall
 from traceh.api.sandbox import SandboxConfiguration
 from traceh.llm.scripted import ScriptedLlmProvider
 from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
@@ -35,7 +35,7 @@ async def test_real_shell_and_completion_verifier_use_original_owner_streams(tmp
         (
             ModelResponse(
                 tool_calls=(ToolCall("execute", "shell", {"command": command}),),
-                finish_reason="tool_calls",
+                completion=CompletionCategory.TOOL_HANDOFF,
             ),
             ModelResponse(content="finished"),
         )
@@ -119,7 +119,7 @@ async def test_sandbox_receipt_uses_existing_agent_admission_and_wall_reservatio
             (
                 ModelResponse(
                     tool_calls=(ToolCall("check", "shell", {"command": "python -c 'print(123)'"}),),
-                    finish_reason="tool_calls",
+                    completion=CompletionCategory.TOOL_HANDOFF,
                 ),
                 ModelResponse(content="completed"),
             )
@@ -169,7 +169,7 @@ async def test_unconfigured_shell_fails_closed_in_real_runtime(tmp_path):
             (
                 ModelResponse(
                     tool_calls=(ToolCall("execute", "shell", {"command": command}),),
-                    finish_reason="tool_calls",
+                    completion=CompletionCategory.TOOL_HANDOFF,
                 ),
                 ModelResponse(content="stopped"),
             )

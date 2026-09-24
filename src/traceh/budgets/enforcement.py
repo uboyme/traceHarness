@@ -64,6 +64,7 @@ from traceh.runtime.continuation import (
     VerificationFeedback,
 )
 from traceh.runtime.repeated_denial import RepeatedDenialState
+from traceh.runtime.response_completeness import ResponseCompleteness
 from traceh.session.event_store import EventStore
 from traceh.session.service import SessionService
 from traceh.supervision.execution import (
@@ -489,6 +490,7 @@ class BudgetContinuationRuntime:
         self,
         *,
         response: ModelResponse,
+        completeness: ResponseCompleteness,
         step_number: int,
         max_steps: int,
         verification: VerificationFeedback | None,
@@ -498,6 +500,7 @@ class BudgetContinuationRuntime:
     ) -> LoopDirective:
         directive = await self._inner.decide(
             response=response,
+            completeness=completeness,
             step_number=step_number,
             max_steps=max_steps,
             verification=verification,
@@ -563,13 +566,22 @@ class BudgetContinuationRuntime:
 
 
 class _BudgetedLlmAccounting(LlmAdmissionAccounting):
-    """One pending Token hold around, but never owning, Provider dispatch."""
+    """One pending Token hold around, but never owning, Provider dispatch.
 
-    __slots__ = ("_owner", "_reservation_id")
+    ``ordinal`` is carried because a bounded retry is recovery of **one**
+    frozen request, not a second request. See ``finish``: without that
+    distinction, reliability is billed per attempt and a flaky transport
+    destroys a long task out of its token grant.
+    """
 
-    def __init__(self, owner: BudgetedLlmRuntime, *, reservation_id: str) -> None:
+    __slots__ = ("_ordinal", "_owner", "_reservation_id")
+
+    def __init__(
+        self, owner: BudgetedLlmRuntime, *, reservation_id: str, ordinal: int
+    ) -> None:
         self._owner = owner
         self._reservation_id = reservation_id
+        self._ordinal = ordinal
 
     async def start(self) -> object:
         return await _start_reserved_usage(
@@ -580,6 +592,39 @@ class _BudgetedLlmAccounting(LlmAdmissionAccounting):
             settle_operation_kind="model-token-settle",
             usage_quality=UsageQuality.UNKNOWN,
         )
+
+    def _unresolved_settlement(self, reserved: int) -> tuple[int, UsageQuality]:
+        """What to charge a failure the provider reported no usage for.
+
+        The conservative answer is the whole reservation: spend that cannot be
+        observed must not escape the ledger, because a provider that fails
+        after billing would otherwise be free. That is right for *a request*
+        and wrong for *an attempt*, and the difference is not academic. A
+        bounded retry re-sends the identical frozen request - the host proves
+        it, by refusing an Attempt whose dispatch drifts - so charging each
+        attempt the full worst case bills one request several times over.
+
+        A real run made the cost concrete: a flaky transport produced twenty
+        failed attempts across seven requests, six of which the retry then
+        recovered. They settled 2,000,546 tokens between them - more than the
+        entire successful workload of 1,699,897 - and exhausted an assistant's
+        two-million grant, ending a task that had spent 725,467 tokens on
+        actual work. Reliability was being paid for out of the task's budget at
+        roughly a hundred thousand tokens per network hiccup.
+
+        So the unobservable charge is borne once, by the attempt that first met
+        the failure. Later ordinals of the same request settle at zero: they
+        are recovery of a request already charged for, not new spend. The
+        ceiling this gives up is only the *multiple* - one request can still
+        cost one worst case with nothing to show for it, which is what the
+        conservative rule is actually protecting against.
+        """
+
+        # Still UNKNOWN, never EXACT: the charge is zero because this request
+        # was already charged, not because the attempt's usage is known.
+        if self._ordinal > 1:
+            return 0, UsageQuality.UNKNOWN
+        return reserved, UsageQuality.UNKNOWN
 
     async def finish(
         self,
@@ -592,7 +637,7 @@ class _BudgetedLlmAccounting(LlmAdmissionAccounting):
             raise BudgetReservationStateError
         reserved = started.amounts.tokens
         if error is not None:
-            tokens, quality = reserved, UsageQuality.UNKNOWN
+            tokens, quality = self._unresolved_settlement(reserved)
             if type(error) is ProviderFailure and error.usage is not None:
                 try:
                     tokens, quality = self._owner._usage_settlement(
@@ -792,7 +837,9 @@ class BudgetedLlmRuntime(LlmRuntime):
                 attempt=attempt,
             )
             inner._bind_accounting(
-                _BudgetedLlmAccounting(self, reservation_id=reservation_id),
+                _BudgetedLlmAccounting(
+                    self, reservation_id=reservation_id, ordinal=attempt.ordinal
+                ),
                 reservation_id=reservation_id,
             )
         except BaseException as error:

@@ -11,9 +11,25 @@ import re
 from traceh.api.events import EventEnvelope
 from traceh.api.json_types import JsonValue, canonical_json, fingerprint
 
-OUTPUT_FORMAT = 1
+#: Format 2 splits reference eligibility from first disclosure, so every result
+#: with a complete outcome is addressable while only oversized ones are withheld
+#: from the first view. A format 1 reference no longer validates and is refused
+#: rather than reinterpreted, per the pre-1.0 protocol rule.
+OUTPUT_FORMAT = 2
 OUTPUT_READ_TOOL = "read_tool_output"
+OUTPUT_LIST_TOOL = "list_tool_outputs"
 OUTPUT_SEARCH_TOOL = "search_tool_output"
+
+#: The read-back capability, named once. A host grants these to a role without
+#: granting the rest of the default tools; they only ever read this Session's
+#: own recorded outputs.
+OUTPUT_TOOL_IDS = (OUTPUT_READ_TOOL, OUTPUT_LIST_TOOL, OUTPUT_SEARCH_TOOL)
+
+#: How this result was first shown to the model. ``inline`` means the model
+#: already saw the whole thing and the reference exists so it can be folded and
+#: read back later; ``retained`` means the payload was withheld from the start.
+INLINE = "inline"
+RETAINED = "retained"
 
 # Session control receipts drive the next Context, independently of model-facing
 # output presentation. Their original domain owners still validate every grant.
@@ -44,18 +60,29 @@ def prepare_tool_output(
     reader_available: bool,
     searcher_available: bool = False,
 ) -> tuple[str, dict[str, JsonValue], dict[str, JsonValue]]:
-    """Keep small output inline; retain large content or structured data once."""
-    if len(content) <= max_chars and len(canonical_json(data)) <= max_chars:
-        return content, data, {}
+    """Address every complete output; withhold only the oversized ones.
+
+    Deciding addressability by this one result's size was the flaw: a long task
+    accumulates hundreds of small results that each stay under the ceiling, so
+    none of them ever became referenceable and none could later be folded. Size
+    still decides what the model *sees first*; it no longer decides whether the
+    result can be found again.
+    """
     payload = {"content": content, "data": data, "evidence": list(evidence)}
+    inline = len(content) <= max_chars and len(canonical_json(data)) <= max_chars
     reference: dict[str, JsonValue] = {
         "format": OUTPUT_FORMAT,
         "effect_id": effect_id,
         "digest": fingerprint(payload),
+        "disclosure": INLINE if inline else RETAINED,
         "content_chars": len(content),
         "content_utf8_bytes": len(content.encode("utf-8")),
         "data_chars": len(canonical_json(data)),
     }
+    if inline:
+        # Shown in full exactly as before. The reference rides along so a later
+        # fold has something precise to collapse to.
+        return content, data, {"output_ref": reference, "retained_output": payload}
     display = {
         "notice": (
             "Tool output retained in this Session's Effect log. "
@@ -119,20 +146,34 @@ def output_reference(outcome: EventEnvelope) -> dict[str, JsonValue] | None:
         or not isinstance(reference, dict)
     ):
         raise ValueError("tool-output-reference-invalid")
+    disclosure = reference.get("disclosure")
+    if disclosure not in (INLINE, RETAINED):
+        raise ValueError("tool-output-reference-invalid")
     expected = {
         "format": OUTPUT_FORMAT,
         "effect_id": data.get("effect_id"),
         "digest": fingerprint(payload),
+        "disclosure": disclosure,
         "content_chars": len(payload["content"]),
         "content_utf8_bytes": len(payload["content"].encode("utf-8")),
         "data_chars": len(canonical_json(payload["data"])),
     }
     if canonical_json(reference) != canonical_json(expected):
         raise ValueError("tool-output-reference-invalid")
-    if canonical_json(data.get("data", {})) != canonical_json(
-        _control_data(data.get("tool_name"), data.get("status"), payload["data"])
-    ):
-        raise ValueError("tool-output-control-data-mismatch")
+    # What the result is allowed to still carry depends on which disclosure it
+    # claims. An inline result must show the same bytes it stored, so a payload
+    # cannot quietly diverge from the text the model read; a retained one must
+    # have been reduced to its control receipts, so nothing large leaked past
+    # the ceiling. Checking only one of these would let the other lie.
+    if disclosure == RETAINED:
+        if canonical_json(data.get("data", {})) != canonical_json(
+            _control_data(data.get("tool_name"), data.get("status"), payload["data"])
+        ):
+            raise ValueError("tool-output-control-data-mismatch")
+    elif canonical_json(data.get("data", {})) != canonical_json(
+        payload["data"]
+    ) or data.get("content", data.get("message")) != payload["content"]:
+        raise ValueError("tool-output-inline-payload-mismatch")
     return reference
 
 
